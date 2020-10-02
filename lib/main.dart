@@ -1,4 +1,7 @@
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cloudtech_calculator/theme_model.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 enum Operation {
   plus,
@@ -57,21 +60,17 @@ extension NumbersExtension on num {
   }
 }
 
-void main() {
-  runApp(MyApp());
-}
+void main() => runApp(ChangeNotifierProvider<ThemeModel>(
+    create: (BuildContext context) => ThemeModel(), child: MyApp()));
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Calculator',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: const MyHomePage(title: 'Calculator'),
+      debugShowCheckedModeBanner: false,
+      theme: Provider.of<ThemeModel>(context).currentTheme,
+      home: const MyHomePage(title: 'Калькулятор'),
     );
   }
 }
@@ -249,10 +248,22 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.title),
+          title: Text(widget.title,
+              style: TextStyle(color: Theme.of(context).accentColor)),
+          shadowColor: const Color(0x00000000),
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.settings),
+              tooltip: 'Show Snackbar',
+              onPressed: () {
+                Provider.of<ThemeModel>(context, listen: false).toggleTheme();
+              },
+              color: Theme.of(context).accentColor,
+            )
+          ],
         ),
         body: Container(
-          color: const Color(0xFF4b44cf),
+          color: Theme.of(context).primaryColor,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -260,12 +271,13 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Expanded(
                   child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      textResh,
-                      style: const TextStyle(fontSize: 80, color: Colors.white),
-                    ),
-                  ),
+                      alignment: Alignment.centerRight,
+                      child: AutoSizeText(
+                        textResh,
+                        style: TextStyle(
+                            fontSize: 70, color: Theme.of(context).accentColor),
+                        maxLines: 1,
+                      )),
                 ),
                 Row(
                   children: [
@@ -366,13 +378,14 @@ class CallButton extends StatelessWidget {
           width: 100,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: const Color(0xE0E0E0E0)),
+              color: const Color(0x00000000)),
           child: FlatButton(
             height: 60,
             onPressed: () => onPressed(value),
             child: Text(
               text,
-              style: TextStyle(fontSize: 40, color: Colors.blue[900]),
+              style:
+                  TextStyle(fontSize: 30, color: Theme.of(context).accentColor),
             ),
           ),
         ),
