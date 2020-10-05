@@ -2,6 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cloudtech_calculator/theme_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'route.dart';
 
 enum Operation {
   plus,
@@ -256,7 +257,10 @@ class _MyHomePageState extends State<MyHomePage> {
               icon: const Icon(Icons.settings),
               tooltip: 'Show Snackbar',
               onPressed: () {
-                Provider.of<ThemeModel>(context, listen: false).toggleTheme();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SecondRoute()),
+                );
               },
               color: Theme.of(context).accentColor,
             )
