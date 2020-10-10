@@ -1,65 +1,12 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cloudtech_calculator/extension.dart';
 import 'package:cloudtech_calculator/theme_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+
+import 'bloc/getcalc_bloc.dart';
 import 'route.dart';
-
-enum Operation {
-  plus,
-  minus,
-  multi,
-  div,
-  point,
-  res,
-  percent,
-  plusMinus,
-  backspace,
-  clear
-}
-
-extension OperationExtension on Operation {
-  String getString() {
-    switch (this) {
-      case Operation.plus:
-        return "+";
-      case Operation.minus:
-        return "-";
-      case Operation.multi:
-        return "x";
-      case Operation.div:
-        return "÷";
-      case Operation.point:
-        return ".";
-      case Operation.res:
-        return "=";
-      default:
-        throw UnimplementedError();
-    }
-  }
-}
-
-enum Numbers { zero, one, two, three, four, five, six, seven, eight, nine }
-
-extension NumbersExtension on num {
-  num backspace() {
-    String pull = "$this";
-    pull = pull.substring(0, pull.length - 1);
-    if (pull.isNotEmpty && pull.split('').last.contains('.')) {
-      pull = pull.substring(0, pull.length - 1);
-    }
-    return num.parse(pull, (pull) => 0);
-  }
-
-  num concat({bool pointer, int value}) {
-    if (pointer == true) {
-      final String pull = "${this}." + "$value";
-      return num.parse(pull);
-    } else {
-      final String pull = "$this" + "$value";
-      return num.parse(pull);
-    }
-  }
-}
 
 void main() => runApp(ChangeNotifierProvider<ThemeModel>(
     create: (BuildContext context) => ThemeModel(), child: MyApp()));
@@ -71,185 +18,20 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: Provider.of<ThemeModel>(context).currentTheme,
-      home: const MyHomePage(title: 'Калькулятор'),
+      home: MyHomePage(title: 'Калькулятор'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key key, this.title}) : super(key: key);
+class MyHomePage extends StatelessWidget {
+  MyHomePage({Key key, this.title}) : super(key: key);
   final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  num a, b;
-  bool pointStatus;
-  dynamic operator;
-  String textResh = "0";
-
-  void getCalc(dynamic type) {
-    if (type is Numbers) {
-      if (a == null) {
-        a = type.index;
-
-        setState(() {
-          textResh = '$a';
-        });
-      } else if (a != null && operator == null) {
-        if (pointStatus == true) {
-          a = a.concat(pointer: true, value: type.index);
-          pointStatus = false;
-        } else {
-          a = a.concat(pointer: false, value: type.index);
-        }
-
-        setState(() {
-          textResh = '$a';
-        });
-      } else if (operator != null) {
-        if (b == null) {
-          b = type.index;
-          setState(() {
-            textResh = "$a ${(operator as Operation).getString()} $b";
-          });
-        } else if (b != null) {
-          if (pointStatus == true) {
-            b = b.concat(pointer: true, value: type.index);
-            pointStatus = false;
-          } else {
-            b = b.concat(pointer: false, value: type.index);
-          }
-          pointStatus = false;
-
-          setState(() {
-            textResh = "$a ${(operator as Operation).getString()} $b";
-          });
-        }
-      }
-    } else if (type is Operation) {
-      if (type == Operation.res) {
-        setState(() {
-          textResh = "$a ${(operator as Operation).getString()} $b";
-        });
-        a = operationEvent(a, b, operator as Operation);
-        b = null;
-        operator = null;
-        setState(() {
-          textResh = "$a";
-        });
-      } else if (type == Operation.point) {
-        if (a != null && b == null) {
-          if (a is double) {
-            pointStatus = false;
-            setState(() {
-              textResh = "$a";
-            });
-          } else {
-            pointStatus = true;
-            setState(() {
-              textResh = "$a.";
-            });
-          }
-        } else {
-          if (b is double) {
-            pointStatus = false;
-            setState(() {
-              textResh = "$a ${(operator as Operation).getString()} $b";
-            });
-          } else {
-            pointStatus = true;
-            setState(() {
-              textResh = "$a ${(operator as Operation).getString()} $b.";
-            });
-          }
-        }
-      } else if (type == Operation.clear) {
-        a = 0;
-        b = null;
-        operator = null;
-        setState(() {
-          textResh = "$a";
-        });
-      } else if (type == Operation.backspace) {
-        if (a != null && b == null) {
-          a = a.backspace();
-          setState(() {
-            textResh = "$a";
-          });
-        } else {
-          b = b.backspace();
-          setState(() {
-            textResh = "$a ${(operator as Operation).getString()} $b";
-          });
-        }
-      } else if (type == Operation.plusMinus) {
-        if (a != null && b == null) {
-          a = a * -1;
-          setState(() {
-            textResh = "$a";
-          });
-        } else {
-          b = b * -1;
-          setState(() {
-            textResh = "$a ${(operator as Operation).getString()} $b";
-          });
-        }
-      } else if (type == Operation.percent) {
-        if (a != null && b == null) {
-          a = a / 100;
-          setState(() {
-            textResh = "$a";
-          });
-        } else {
-          b = b / 100;
-          setState(() {
-            textResh = "$a ${(operator as Operation).getString()} $b";
-          });
-        }
-      } else {
-        operator = type;
-        setState(() {
-          textResh = "$a ${(operator as Operation).getString()}";
-        });
-      }
-    }
-  }
-
-  num operationEvent(num x, num y, Operation op) {
-    num result = 0;
-    switch (op) {
-      case Operation.plus:
-        result = x + y;
-        break;
-      case Operation.minus:
-        result = x - y;
-        break;
-      case Operation.multi:
-        result = x * y;
-        break;
-      case Operation.div:
-        result = x / y;
-        break;
-      default:
-        result = 0;
-        break;
-    }
-
-    if (result % 1 == 0) {
-      return result.toInt();
-    } else {
-      return result;
-    }
-  }
-
+  final _getCalc = CalcEventBloc();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.title,
+          title: Text(title,
               style: TextStyle(color: Theme.of(context).accentColor)),
           shadowColor: const Color(0x00000000),
           actions: <Widget>[
@@ -275,85 +57,148 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Expanded(
                   child: Align(
-                      alignment: Alignment.centerRight,
-                      child: AutoSizeText(
-                        textResh,
-                        style: TextStyle(
-                            fontSize: 70, color: Theme.of(context).accentColor),
-                        maxLines: 1,
-                      )),
+                    alignment: Alignment.centerRight,
+                    child: BlocBuilder<CalcEventBloc, CalcEventState>(
+                        cubit: _getCalc,
+                        builder: (context, state) {
+                          if (state is EmptyState) {
+                            return AutoSizeText(
+                              "0",
+                              style: TextStyle(
+                                  fontSize: 70,
+                                  color: Theme.of(context).accentColor),
+                              maxLines: 1,
+                            );
+                          } else if (state is FirstState) {
+                            return AutoSizeText(
+                              state.a.toString(),
+                              style: TextStyle(
+                                  fontSize: 70,
+                                  color: Theme.of(context).accentColor),
+                              maxLines: 1,
+                            );
+                          } else if (state is OperatorState &&
+                              state.b == null) {
+                            return AutoSizeText(
+                              "${state.a}${state.operator.getString()}",
+                              style: TextStyle(
+                                  fontSize: 70,
+                                  color: Theme.of(context).accentColor),
+                              maxLines: 1,
+                            );
+                          } else if (state is OperatorState &&
+                              state.b != null) {
+                            return AutoSizeText(
+                              "${state.a}${state.operator.getString()}${state.b}.",
+                              style: TextStyle(
+                                  fontSize: 70,
+                                  color: Theme.of(context).accentColor),
+                              maxLines: 1,
+                            );
+                          } else if (state is SecondState) {
+                            return AutoSizeText(
+                              "${state.a}${state.operator.getString()}${state.b}",
+                              style: TextStyle(
+                                  fontSize: 70,
+                                  color: Theme.of(context).accentColor),
+                              maxLines: 1,
+                            );
+                          } else if (state is ResultState) {
+                            return AutoSizeText(
+                              "${state.result}",
+                              style: TextStyle(
+                                  fontSize: 70,
+                                  color: Theme.of(context).accentColor),
+                              maxLines: 1,
+                            );
+                          }
+
+                          return const SizedBox.shrink();
+                        }),
+                  ),
                 ),
                 Row(
                   children: [
                     CallButton(
-                      text: "±",
-                      value: Operation.plusMinus,
-                      onPressed: getCalc,
-                    ),
+                        text: "±",
+                        onPressed: () =>
+                            _getCalc.add(PlusMinusOperationEvent())),
                     CallButton(
                         text: "%",
-                        value: Operation.percent,
-                        onPressed: getCalc),
+                        onPressed: () => _getCalc.add(PercentOperationEvent())),
                     CallButton(
                         text: "⌫",
-                        value: Operation.backspace,
-                        onPressed: getCalc),
+                        onPressed: () =>
+                            _getCalc.add(BackspaceOperationEvent())),
                     CallButton(
-                        text: "AC", value: Operation.clear, onPressed: getCalc),
+                        text: "AC",
+                        onPressed: () =>
+                            _getCalc.add(ClearAllOperationEvent())),
                   ],
                 ),
                 Row(
                   children: [
                     CallButton(
-                      text: "7",
-                      value: Numbers.seven,
-                      onPressed: getCalc,
-                    ),
+                        text: "7",
+                        onPressed: () => _getCalc.add(NumberEvent(7))),
                     CallButton(
-                        text: "8", value: Numbers.eight, onPressed: getCalc),
+                        text: "8",
+                        onPressed: () => _getCalc.add(NumberEvent(8))),
                     CallButton(
-                        text: "9", value: Numbers.nine, onPressed: getCalc),
+                        text: "9",
+                        onPressed: () => _getCalc.add(NumberEvent(9))),
                     CallButton(
-                        text: "/", value: Operation.div, onPressed: getCalc),
+                        text: "/",
+                        onPressed: () =>
+                            _getCalc.add(DivisionOperationEvent())),
                   ],
                 ),
                 Row(
                   children: [
                     CallButton(
-                        text: "4", value: Numbers.four, onPressed: getCalc),
+                        text: "4",
+                        onPressed: () => _getCalc.add(NumberEvent(4))),
                     CallButton(
-                        text: "5", value: Numbers.five, onPressed: getCalc),
+                        text: "5",
+                        onPressed: () => _getCalc.add(NumberEvent(5))),
                     CallButton(
-                        text: "6", value: Numbers.six, onPressed: getCalc),
+                        text: "6",
+                        onPressed: () => _getCalc.add(NumberEvent(6))),
                     CallButton(
-                        text: "*", value: Operation.multi, onPressed: getCalc),
+                        text: "*",
+                        onPressed: () => _getCalc.add(MultiOperationEvent())),
                   ],
                 ),
                 Row(
                   children: [
                     CallButton(
-                        text: "1", value: Numbers.one, onPressed: getCalc),
+                        text: "1",
+                        onPressed: () => _getCalc.add(NumberEvent(1))),
                     CallButton(
-                        text: "2", value: Numbers.two, onPressed: getCalc),
+                        text: "2",
+                        onPressed: () => _getCalc.add(NumberEvent(2))),
                     CallButton(
-                        text: "3", value: Numbers.three, onPressed: getCalc),
+                        text: "3",
+                        onPressed: () => _getCalc.add(NumberEvent(3))),
                     CallButton(
-                        text: "-", value: Operation.minus, onPressed: getCalc),
+                        text: "-",
+                        onPressed: () => _getCalc.add(MinusOperationEvent())),
                   ],
                 ),
                 Row(
                   children: [
                     CallButton(
-                        text: "0", value: Numbers.zero, onPressed: getCalc),
+                        text: "0",
+                        onPressed: () => _getCalc.add(NumberEvent(0))),
                     CallButton(
-                        text: ".", value: Operation.point, onPressed: getCalc),
+                        text: ".",
+                        onPressed: () => _getCalc.add(PointOperationEvent())),
                     CallButton(
-                        text: "=", value: Operation.res, onPressed: getCalc),
+                        text: "=",
+                        onPressed: () => _getCalc.add(ResultOperationEvent())),
                     CallButton(
-                      text: "+",
-                      value: Operation.plus,
-                      onPressed: getCalc,
-                    ),
+                        text: "+",
+                        onPressed: () => _getCalc.add(PlusOperationEvent())),
                   ],
                 ),
               ],
@@ -365,12 +210,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class CallButton extends StatelessWidget {
   final String text;
-  final dynamic value;
-
-  final void Function(dynamic) onPressed;
-
-  const CallButton(
-      {@required this.text, @required this.value, @required this.onPressed});
+  final void Function() onPressed;
+  const CallButton({@required this.text, @required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -385,7 +226,7 @@ class CallButton extends StatelessWidget {
               color: const Color(0x00000000)),
           child: FlatButton(
             height: 60,
-            onPressed: () => onPressed(value),
+            onPressed: () => onPressed(),
             child: Text(
               text,
               style:
