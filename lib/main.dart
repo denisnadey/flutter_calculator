@@ -35,16 +35,30 @@ class MyHomePage extends StatelessWidget {
               style: TextStyle(color: Theme.of(context).accentColor)),
           shadowColor: const Color(0x00000000),
           actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.settings),
-              tooltip: 'Show Snackbar',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SecondRoute()),
-                );
+            PopupMenuButton(
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 1,
+                  child: Text("Настройки темы"),
+                ),
+                const PopupMenuItem(
+                  value: 2,
+                  child: Text("Курс валют"),
+                ),
+              ],
+              onSelected: (value) {
+                if (value == 1) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SecondRoute()),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CursState()),
+                  );
+                }
               },
-              color: Theme.of(context).accentColor,
             )
           ],
         ),
